@@ -29,25 +29,31 @@ export default class InfinitePager extends Component{
       window.removeEventListener('scroll', this.handleScroll);
     }
   }
+  shouldComponentUpdate(nextProps, nextState){
+    if(nextState.offsetElementEnd != this.state.offsetElementEnd)
+      return true;
+    else
+      return false;
+  }
   ///////////////////////////////////////////////////////////////// HANDLERS 
   handleScroll(event){
-    const { pageYOffset } = window,
+    const { pageYOffset, scrollY } = window,
           { elementHeight } = this.props,
           indexElement = pageYOffset / elementHeight;
 
     let minIndex = Math.max(Math.ceil(indexElement) - 1, 0);
+    let elementsCountOnWindow = Math.ceil(this.state.ulHeight / elementHeight)
 
-    console.log('scroll');
-    // this.setState({
-    //   offsetElementStart: minIndex,
-    //   offsetElementEnd: minIndex + this.state.offsetElementEnd
-    // });
+    this.setState({
+      offsetElementStart: minIndex,
+      offsetElementEnd: minIndex + elementsCountOnWindow
+    });
 
   }
   getItemsToShow(){
     const { children } = this.props;
 
-    return children.slice(this.state.offsetElementStart, this.state.offsetElementEnd);
+    return children.slice(this.state.offsetElementStart, this.state.offsetElementEnd + 3);
   }
   ///////////////////////////////////////////////////////////////// METHODS 
   getUlHeight(){
@@ -56,12 +62,16 @@ export default class InfinitePager extends Component{
   }
   render(){
     const {elementHeight, totalElements, containerHeight, children} = this.props,
+          {offsetElementStart, offsetElementEnd} = this.state,
           itemsToShow = this.getItemsToShow(),
-          totalHeight = (elementHeight * totalElements) - (itemsToShow.length * elementHeight);
+          firstDivHeight = offsetElementStart * elementHeight,
+          lastDivHeight = (elementHeight * totalElements) - ((offsetElementEnd - offsetElementStart)* elementHeight) - firstDivHeight;
 
     return (
       <ul style={{height: this.state.ulHeight}}>
+        <div style={{ height: firstDivHeight }}></div>
         { itemsToShow }
+        <div style={{ height: lastDivHeight }}></div>
       </ul>
     );
   }
