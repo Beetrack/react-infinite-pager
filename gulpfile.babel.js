@@ -50,7 +50,7 @@ gulp.task('styles', () => {
     .pipe($.if('*.css', $.cssnano()))
     .pipe($.size({title: 'styles'}))
     .pipe($.sourcemaps.write('./'))
-    .pipe(gulp.dest('./example/css/'))
+    .pipe(gulp.dest('./docs/css/'))
     .pipe(gulp.dest('.tmp/styles'));
 });
 
@@ -64,14 +64,14 @@ gulp.task('default', ['styles', 'scripts'], () => {
 
   gulp.watch(['./index.html'], [reload]);
   gulp.watch(['**/*.js', '**/*.jsx'], {cwd: src}, ['scripts', reload]);
-  gulp.watch(['./example/js/index.js'], ['scripts', reload]);
+  gulp.watch(['./docs/js/index.js'], ['scripts', reload]);
   gulp.watch(['./src/**/*.scss'], ['styles', reload]);
 });
 
 function bundleApp(isProduction) {
   scriptsCount++;
   var appBundler = browserify({
-      entries: './example/js/index.js',
+      entries: './docs/js/index.js',
       debug: true
     })
 
@@ -83,7 +83,7 @@ function bundleApp(isProduction) {
       .bundle()
       .on('error', gutil.log)
       .pipe(source('vendors.js'))
-      .pipe(gulp.dest('./example/js/'));
+      .pipe(gulp.dest('./docs/js/'));
     }
     if (!isProduction){
       dependencies.forEach(function(dep){
@@ -96,5 +96,5 @@ function bundleApp(isProduction) {
       .bundle()
       .on('error',gutil.log)
       .pipe(source('bundle.js'))
-      .pipe(gulp.dest('./example/js/'));
+      .pipe(gulp.dest('./docs/js/'));
 }
