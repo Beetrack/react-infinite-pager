@@ -18,14 +18,18 @@ export default class InfinitePager extends Component{
     }
   }
   componentDidMount(){
-    const { useWindowAsScrollContainer } = this.props;
-    if(useWindowAsScrollContainer){
+    const { containerHeight } = this.props;
+    if(!containerHeight){
       window.addEventListener('scroll', this.handleScroll);
+    }else{
+      this.refs.container.addEventListener('scroll', this.handleScroll);
     }
   }
   componentWillUnmount(){
-    if(useWindowAsScrollContainer){
+    if(!containerHeight){
       window.removeEventListener('scroll', this.handleScroll);
+    }else{
+      this.refs.container.removeEventListener('scroll', this.handleScroll);
     }
   }
   shouldComponentUpdate(nextProps, nextState){
@@ -35,20 +39,23 @@ export default class InfinitePager extends Component{
       return false;
   }
   ///////////////////////////////////////////////////////////////// HANDLERS 
-  handleScroll(event){
-    const { pageYOffset, scrollY } = window,
-          { elementHeight } = this.props,
+  handleScroll({currentTarget}){
+    const { elementHeight } = this.props,
           { ulHeight } = this.state,
-          indexElement = pageYOffset / elementHeight;
+          offset = currentTarget.scrollTop != undefined ? currentTarget.scrollTop : currentTarget.pageYOffset,
+          indexElement = offset / elementHeight;
 
     let minIndex = Math.max(Math.ceil(indexElement) - 1, 0);
     let elementsCountOnWindow = Math.ceil(ulHeight / elementHeight)
-
+    
     this.setState({
       offsetElementStart: minIndex,
       offsetElementEnd: minIndex + elementsCountOnWindow
     });
 
+  }
+  handleContainerScroll(event){
+    console.log(event.currentTarget.scrollTop)
   }
   getItemsToShow(){
     const { children, itemsOutsideTheBox } = this.props;
@@ -72,14 +79,28 @@ export default class InfinitePager extends Component{
 
     return (elementHeight * totalElements) - ((offsetElementEnd - offsetElementStart)* elementHeight) - firstDivHeight
   }
+  getContainerStyles(){
+    const { containerHeight } = this.props,
+          { ulHeight } = this.state;
+
+    if(containerHeight){
+      return {
+        height: ulHeight,
+        overflow: 'hidden',
+        overflowY: 'scroll'
+      }
+    }else{
+      return {}
+    }
+  }
   render(){
-    const { ulHeight } = this.state,
-          itemsToShow = this.getItemsToShow(),
+    const itemsToShow = this.getItemsToShow(),
           firstDivHeight = this.getFirstDivHeight(),
-          lastDivHeight = this.getLastDivHeight(firstDivHeight);
+          lastDivHeight = this.getLastDivHeight(firstDivHeight),
+          containerStyles = this.getContainerStyles();
 
     return (
-      <ul style={{ulHeight}}>
+      <ul style={containerStyles} ref="container">
         <div style={{ height: firstDivHeight }}></div>
         { itemsToShow }
         <div style={{ height: lastDivHeight }}></div>
@@ -92,11 +113,9 @@ InfinitePager.PropTypes = {
   elementHeight: PropTypes.number.isRequired,
   totalElement: PropTypes.number.isRequired,
   containerHeight: PropTypes.number,
-  useWindowAsScrollContainer: PropTypes.bool,
   itemsOutsideTheBox: PropTypes.number
 }
 
 InfinitePager.defaultProps = {
-  useWindowAsScrollContainer: true,
   itemsOutsideTheBox: 2
 }
