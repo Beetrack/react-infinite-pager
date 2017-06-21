@@ -14,8 +14,7 @@ export default class InfinitePager extends Component{
     this.state = {
       offsetElementStart: 0,
       offsetElementEnd: Math.ceil(ulHeight / elementHeight),
-      ulHeight: ulHeight,
-      isScrolling: false
+      ulHeight: ulHeight
     }
   }
   componentDidMount(){
@@ -39,10 +38,11 @@ export default class InfinitePager extends Component{
   handleScroll(event){
     const { pageYOffset, scrollY } = window,
           { elementHeight } = this.props,
+          { ulHeight } = this.state,
           indexElement = pageYOffset / elementHeight;
 
     let minIndex = Math.max(Math.ceil(indexElement) - 1, 0);
-    let elementsCountOnWindow = Math.ceil(this.state.ulHeight / elementHeight)
+    let elementsCountOnWindow = Math.ceil(ulHeight / elementHeight)
 
     this.setState({
       offsetElementStart: minIndex,
@@ -51,24 +51,35 @@ export default class InfinitePager extends Component{
 
   }
   getItemsToShow(){
-    const { children } = this.props;
+    const { children, itemsOutsideTheBox } = this.props;
 
-    return children.slice(this.state.offsetElementStart, this.state.offsetElementEnd + 3);
+    return children.slice(this.state.offsetElementStart, this.state.offsetElementEnd + itemsOutsideTheBox);
   }
   ///////////////////////////////////////////////////////////////// METHODS 
   getUlHeight(){
     const {containerHeight} = this.props;
     return containerHeight ? containerHeight : window.innerHeight;
   }
+  getFirstDivHeight(){
+    const { elementHeight } = this.props,
+          { offsetElementStart } = this.state;
+
+    return offsetElementStart * elementHeight;
+  }
+  getLastDivHeight(firstDivHeight){
+    const { elementHeight, totalElements } = this.props,
+          { offsetElementStart, offsetElementEnd } = this.state;
+
+    return (elementHeight * totalElements) - ((offsetElementEnd - offsetElementStart)* elementHeight) - firstDivHeight
+  }
   render(){
-    const {elementHeight, totalElements, containerHeight, children} = this.props,
-          {offsetElementStart, offsetElementEnd} = this.state,
+    const { ulHeight } = this.state,
           itemsToShow = this.getItemsToShow(),
-          firstDivHeight = offsetElementStart * elementHeight,
-          lastDivHeight = (elementHeight * totalElements) - ((offsetElementEnd - offsetElementStart)* elementHeight) - firstDivHeight;
+          firstDivHeight = this.getFirstDivHeight(),
+          lastDivHeight = this.getLastDivHeight(firstDivHeight);
 
     return (
-      <ul style={{height: this.state.ulHeight}}>
+      <ul style={{ulHeight}}>
         <div style={{ height: firstDivHeight }}></div>
         { itemsToShow }
         <div style={{ height: lastDivHeight }}></div>
@@ -81,9 +92,11 @@ InfinitePager.PropTypes = {
   elementHeight: PropTypes.number.isRequired,
   totalElement: PropTypes.number.isRequired,
   containerHeight: PropTypes.number,
-  useWindowAsScrollContainer: PropTypes.bool
+  useWindowAsScrollContainer: PropTypes.bool,
+  itemsOutsideTheBox: PropTypes.number
 }
 
 InfinitePager.defaultProps = {
-  useWindowAsScrollContainer: true
+  useWindowAsScrollContainer: true,
+  itemsOutsideTheBox: 2
 }
