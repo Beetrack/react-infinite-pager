@@ -5,16 +5,16 @@ export default class InfinitePager extends Component{
   ///////////////////////////////////////////////////////////////// REACT LIFECYCLE 
   constructor(props){
     super(props);
+    const { elementHeight } = this.props;
 
-    const { elementHeight } = this.props, 
-          ulHeight = this.getUlHeight();
+    this.ulHeight= this.getUlHeight();
+    this.elementsCountOnWindow = Math.ceil(this.ulHeight / elementHeight);
 
     this.handleScroll = this.handleScroll.bind(this);
 
     this.state = {
       offsetElementStart: 0,
-      offsetElementEnd: Math.ceil(ulHeight / elementHeight),
-      ulHeight: ulHeight
+      offsetElementEnd: Math.ceil(this.ulHeight / elementHeight)
     }
   }
   componentDidMount(){
@@ -41,28 +41,23 @@ export default class InfinitePager extends Component{
   ///////////////////////////////////////////////////////////////// HANDLERS 
   handleScroll({currentTarget}){
     const { elementHeight } = this.props,
-          { ulHeight } = this.state,
           offset = currentTarget.scrollTop != undefined ? currentTarget.scrollTop : currentTarget.pageYOffset,
           indexElement = offset / elementHeight;
 
     let minIndex = Math.max(Math.ceil(indexElement) - 1, 0);
-    let elementsCountOnWindow = Math.ceil(ulHeight / elementHeight)
     
     this.setState({
       offsetElementStart: minIndex,
-      offsetElementEnd: minIndex + elementsCountOnWindow
+      offsetElementEnd: minIndex + this.elementsCountOnWindow
     });
 
   }
-  handleContainerScroll(event){
-    console.log(event.currentTarget.scrollTop)
-  }
+  ///////////////////////////////////////////////////////////////// METHODS 
   getItemsToShow(){
     const { children, itemsOutsideTheBox } = this.props;
 
     return children.slice(this.state.offsetElementStart, this.state.offsetElementEnd + itemsOutsideTheBox);
   }
-  ///////////////////////////////////////////////////////////////// METHODS 
   getUlHeight(){
     const {containerHeight} = this.props;
     return containerHeight ? containerHeight : window.innerHeight;
@@ -80,12 +75,11 @@ export default class InfinitePager extends Component{
     return (elementHeight * totalElements) - ((offsetElementEnd - offsetElementStart)* elementHeight) - firstDivHeight
   }
   getContainerStyles(){
-    const { containerHeight } = this.props,
-          { ulHeight } = this.state;
+    const { containerHeight } = this.props;
 
     if(containerHeight){
       return {
-        height: ulHeight,
+        height: this.ulHeight,
         overflow: 'hidden',
         overflowY: 'scroll'
       }
@@ -113,7 +107,8 @@ InfinitePager.PropTypes = {
   elementHeight: PropTypes.number.isRequired,
   totalElement: PropTypes.number.isRequired,
   containerHeight: PropTypes.number,
-  itemsOutsideTheBox: PropTypes.number
+  itemsOutsideTheBox: PropTypes.number,
+  scrollEndCallback: PropTypes.func
 }
 
 InfinitePager.defaultProps = {

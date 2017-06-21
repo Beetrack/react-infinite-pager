@@ -16,7 +16,6 @@ ReactDOM.render(
   <InfinitePager
     elementHeight={ 60 }
     totalElements={ 30 }
-    containerHeight={ 300 }
   >
     { elements }
   </InfinitePager>, 
